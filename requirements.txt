@@ -1,0 +1,10 @@
+# Tested on Python 3.14.4, Windows 11
+fastapi==0.162.0
+numba==0.68.1
+numpy==2.4.6
+opencv-contrib-python-headless==4.14.0.94
+pillow==12.2.0
+python-multipart==0.0.27
+rembg[cpu]==2.0.86
+uvicorn==0.46.0
+websockets==16.0

@@ -1,0 +1,39 @@
+{
+ "layout": "inline",
+ "hour24": true,
+ "seconds": true,
+ "fg": "#aa3c81",
+ "bg": "#000000",
+ "physics": "fluid",
+ "gravity": 1.3,
+ "bounce": 0.35,
+ "show": "art",
+ "art_every_min": 1,
+ "art_for_sec": 20,
+ "active_anim": "795f5617f7",
+ "lamp": "auto",
+ "release_deg": 35,
+ "reform_deg": 20,
+ "flip_deg": 120,
+ "release_hold": 0.12,
+ "reform_hold": 0.5,
+ "flip_hold": 0.8,
+ "cal": {
+  "right": [
+   -0.992183208288772,
+   0.12426093428395805,
+   0.011476123068222637
+  ],
+  "down": [
+   -0.023065599962571463,
+   -0.09223464718411216,
+   -0.9954701140452127
+  ],
+  "normal": [
+   -0.12263955026077747,
+   -0.987953435172782,
+   0.09437982115968455
+  ]
+ },
+ "flip_x": false
+}

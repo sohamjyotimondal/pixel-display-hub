@@ -1,0 +1,932 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pixel Display Hub</title>
+    <style>
+      :root {
+        --bg: #111214;
+        --card: #1b1c20;
+        --line: #2a2b31;
+        --text: #ececf1;
+        --muted: #8e909a;
+        --accent: #7c5cff;
+        --ok: #3ecf8e;
+        --bad: #ff6b6b;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font:
+          16px/1.5 system-ui,
+          -apple-system,
+          Segoe UI,
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+      main {
+        max-width: 520px;
+        margin: 0 auto;
+        padding: 24px 16px 48px;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+      .logo {
+        display: grid;
+        grid-template-columns: repeat(4, 6px);
+        gap: 3px;
+      }
+      .logo i {
+        width: 6px;
+        height: 6px;
+        background: var(--text);
+        border-radius: 1px;
+      }
+      .logo i:nth-child(odd) {
+        opacity: 0.35;
+      }
+      h1 {
+        font-size: 24px;
+        margin: 0;
+      }
+      nav {
+        display: flex;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 4px;
+        margin-bottom: 16px;
+      }
+      nav button {
+        flex: 1;
+        background: transparent;
+        color: var(--muted);
+        padding: 10px;
+        border-radius: 9px;
+        font-size: 12.8px;
+      }
+      nav button[aria-selected="true"] {
+        background: var(--accent);
+        color: #fff;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 18px;
+        margin-bottom: 16px;
+      }
+      .card h2 {
+        font-size: 16px;
+        margin: 0 0 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .card h2 span {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--accent);
+        display: inline-grid;
+        place-items: center;
+        font-size: 12.8px;
+      }
+      .drop {
+        border: 2px dashed var(--line);
+        border-radius: 12px;
+        min-height: 200px;
+        display: grid;
+        place-items: center;
+        text-align: center;
+        color: var(--muted);
+        padding: 16px;
+        cursor: pointer;
+        overflow: hidden;
+      }
+      .drop.over {
+        border-color: var(--accent);
+      }
+      .drop img {
+        max-width: 100%;
+        max-height: 50vh;
+        border-radius: 8px;
+        display: block;
+      }
+      .drop.has {
+        border-style: solid;
+        padding: 0;
+      }
+      .actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 14px;
+        flex-wrap: wrap;
+      }
+      button {
+        flex: 1;
+        padding: 13px;
+        border: 0;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        background: var(--accent);
+        color: #fff;
+      }
+      button.ghost {
+        background: transparent;
+        color: var(--text);
+        border: 1px solid var(--line);
+      }
+      button.small {
+        flex: 0 0 auto;
+        padding: 8px 12px;
+        font-size: 12.8px;
+      }
+      button.on {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      button:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 12.8px;
+        margin-top: 10px;
+        min-height: 1.2em;
+      }
+      .err {
+        color: var(--bad);
+      }
+      input[type="file"] {
+        display: none;
+      }
+      .opts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 18px;
+        align-items: center;
+        color: var(--muted);
+        font-size: 12.8px;
+        margin-bottom: 14px;
+      }
+      select,
+      input[type="text"],
+      input[type="number"] {
+        background: var(--bg);
+        color: var(--text);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 6px 8px;
+        font-size: 16px;
+      }
+      input[type="number"] {
+        width: 64px;
+      }
+      input[type="text"] {
+        flex: 1;
+        min-width: 0;
+      }
+      input[type="color"] {
+        width: 36px;
+        height: 28px;
+        padding: 0;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: none;
+        vertical-align: middle;
+      }
+      input[type="range"] {
+        width: 120px;
+        vertical-align: middle;
+        accent-color: var(--accent);
+      }
+      canvas.px {
+        display: block;
+        margin: 0 auto;
+        background: #000;
+        border-radius: 10px;
+        image-rendering: pixelated;
+      }
+      #out {
+        width: min(100%, 320px);
+      }
+      #screen {
+        width: min(100%, 320px);
+        aspect-ratio: 1;
+        border: 1px solid var(--line);
+      }
+      .status {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 14px;
+        justify-content: center;
+        font-size: 12.8px;
+        color: var(--muted);
+        margin-top: 10px;
+      }
+      .dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--bad);
+        margin-right: 5px;
+      }
+      .dot.ok {
+        background: var(--ok);
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 9px 0;
+        border-top: 1px solid var(--line);
+        font-size: 12.8px;
+      }
+      .row:first-of-type {
+        border-top: 0;
+      }
+      .row > span {
+        color: var(--muted);
+      }
+      .lib {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+      .lib .item {
+        background: var(--bg);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px;
+      }
+      .lib .item.active {
+        border-color: var(--accent);
+      }
+      .lib canvas {
+        width: 100%;
+        aspect-ratio: 1;
+      }
+      .lib .name {
+        font-size: 12.8px;
+        margin: 8px 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      [hidden] {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="logo">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i
+          ><i></i><i></i>
+        </div>
+        <h1>Pixel Display Hub</h1>
+      </header>
+      <nav>
+        <button data-tab="clock" aria-selected="true">Clock</button>
+        <button data-tab="create" aria-selected="false">Create</button>
+        <button data-tab="library" aria-selected="false">Library</button>
+      </nav>
+
+      <!-- ================= CLOCK ================= -->
+      <section id="tab-clock">
+        <div class="card">
+          <canvas id="screen" class="px" width="128" height="128"></canvas>
+          <div class="status">
+            <span
+              ><i class="dot" id="devDot"></i
+              ><span id="devTxt">Device offline</span></span
+            >
+            <span id="stState">–</span><span id="stTilt"></span
+            ><span id="stLamp"></span><span id="stMs"></span>
+          </div>
+          <div class="actions">
+            <button class="ghost small" data-pose="0">Upright</button>
+            <button class="ghost small" data-pose="90">Tip right</button>
+            <button class="ghost small" data-pose="180">Flip over</button>
+            <button class="ghost small" data-pose="flat">Lay flat</button>
+            <button class="ghost small" id="shake">Shake</button>
+          </div>
+          <div class="actions">
+            <button class="ghost small" id="phoneTilt">
+              Tilt with this phone
+            </button>
+            <button class="ghost small" id="useDevice">
+              Use device sensor
+            </button>
+          </div>
+          <div class="meta" id="tiltMeta">
+            Tilt source: the device's own sensor.
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Display</h2>
+          <div class="row">
+            <span>Show</span
+            ><select data-k="show">
+              <option value="clock">Clock</option>
+              <option value="art">Artwork</option>
+              <option value="both">Clock, artwork on schedule</option>
+            </select>
+          </div>
+          <div class="row">
+            <span>Artwork every</span>
+            <div>
+              <input type="number" data-k="art_every_min" min="1" max="60" />
+              min for
+              <input type="number" data-k="art_for_sec" min="5" max="59" /> s
+            </div>
+          </div>
+          <div class="row">
+            <span>Layout</span
+            ><select data-k="layout">
+              <option value="inline">HH:MM in a line</option>
+              <option value="stacked">Hours over minutes</option>
+            </select>
+          </div>
+          <div class="row">
+            <span>24 hour</span><input type="checkbox" data-k="hour24" />
+          </div>
+          <div class="row">
+            <span>Seconds marbles</span
+            ><input type="checkbox" data-k="seconds" />
+          </div>
+          <div class="row">
+            <span>Colours</span>
+            <div>
+              <input type="color" data-k="fg" /> on
+              <input type="color" data-k="bg" />
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Physics</h2>
+          <div class="row">
+            <span>When turned over</span
+            ><select data-k="physics">
+              <option value="marbles">Marbles</option>
+              <option value="fluid">Fluid</option>
+            </select>
+          </div>
+          <div class="row">
+            <span>Gravity</span
+            ><input
+              type="range"
+              data-k="gravity"
+              min="0.3"
+              max="2"
+              step="0.1"
+            />
+          </div>
+          <div class="row">
+            <span>Bounce</span
+            ><input
+              type="range"
+              data-k="bounce"
+              min="0"
+              max="0.7"
+              step="0.05"
+            />
+          </div>
+          <div class="row">
+            <span>Lamp</span
+            ><select data-k="lamp">
+              <option value="auto">Off when flipped</option>
+              <option value="on">Always on</option>
+              <option value="off">Always off</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Calibrate sensor</h2>
+          <div class="meta" style="margin: 0 0 4px">
+            Capture upright, left/right and upside for the best result, then
+            apply. Needs the device online.
+          </div>
+          <div class="actions">
+            <button class="ghost small" id="calUp">Upright</button>
+            <button class="ghost small" id="calLeft">Tilt left</button>
+            <button class="ghost small" id="calRight">Tilt right</button>
+            <button class="ghost small" id="calUpside">Upside down</button>
+            <button class="ghost small" id="calFlat">Flat (optional)</button>
+          </div>
+          <div class="actions" style="margin-top: 10px">
+            <button class="ghost" id="calApply">Apply calibration</button>
+            <button class="ghost" id="calReset">Reset captures</button>
+          </div>
+          <div class="row" style="margin-top: 10px">
+            <span>Mirror left and right</span
+            ><input type="checkbox" data-k="flip_x" />
+          </div>
+          <div class="meta" id="calMeta"></div>
+        </div>
+      </section>
+
+      <!-- ================= CREATE ================= -->
+      <section id="tab-create" hidden>
+        <div class="card">
+          <h2><span>1</span>Photo</h2>
+          <label class="drop" id="drop" for="file"
+            ><div>
+              Tap to take a photo or choose an image<br /><small
+                >JPG, PNG, HEIC, WebP, up to 15 MB</small
+              >
+            </div></label
+          >
+          <input type="file" id="file" accept="image/*" capture="environment" />
+          <div class="actions">
+            <button id="pick" type="button">Take / choose photo</button>
+            <button id="clear" type="button" class="ghost" hidden>Clear</button>
+          </div>
+          <div class="meta" id="meta"></div>
+        </div>
+
+        <div class="card" id="step2" hidden>
+          <h2><span>2</span>Pixel art</h2>
+          <div class="opts">
+            <label
+              >Grid
+              <select id="size">
+                <option>8</option>
+                <option>16</option>
+                <option>32</option>
+                <option>64</option>
+                <option selected>128</option>
+              </select></label
+            >
+            <label
+              >Mode
+              <select id="mode">
+                <option value="auto">Auto</option>
+                <option value="object">Object</option>
+                <option value="ink">Handwriting</option>
+              </select></label
+            >
+            <label
+              >Style
+              <select id="style">
+                <option value="filled">Filled</option>
+                <option value="lines">Lines</option>
+              </select></label
+            >
+            <label
+              >Motion
+              <select id="anim">
+                <option value="none">None</option>
+                <option value="float">Float</option>
+                <option value="wobble">Wobble</option>
+                <option value="breathe">Breathe</option>
+              </select></label
+            >
+            <label><input type="checkbox" id="invert" /> Invert</label>
+          </div>
+          <canvas id="out" class="px" width="512" height="512"></canvas>
+          <div class="actions">
+            <button id="process" type="button">Process</button
+            ><button id="rotate" type="button" class="ghost">Rotate 90°</button>
+          </div>
+          <div class="meta" id="meta2"></div>
+          <div class="actions" id="saveRow" hidden>
+            <input
+              type="text"
+              id="saveName"
+              placeholder="Name it"
+              maxlength="40"
+            />
+            <button id="save" type="button" class="small">
+              Save and show on clock
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= LIBRARY ================= -->
+      <section id="tab-library" hidden>
+        <div class="card">
+          <h2>Saved artwork</h2>
+          <div class="lib" id="lib"></div>
+          <div class="meta" id="libMeta"></div>
+        </div>
+      </section>
+    </main>
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const api = async (url, opt) => {
+        const r = await fetch(url, opt);
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(j.detail || r.statusText);
+        return j;
+      };
+
+      // ---------- tabs
+      document.querySelectorAll("nav button").forEach(
+        (b) =>
+          (b.onclick = () => {
+            document
+              .querySelectorAll("nav button")
+              .forEach((x) => x.setAttribute("aria-selected", x === b));
+            ["clock", "create", "library"].forEach(
+              (t) => ($("tab-" + t).hidden = t !== b.dataset.tab),
+            );
+            if (b.dataset.tab === "library") loadLibrary();
+            if (b.dataset.tab === "clock")
+              api("/api/config").then((c) => {
+                cfg = c;
+                fill();
+              });
+          }),
+      );
+
+      // ---------- live preview: the exact frames the ESP32 gets
+      const screen = $("screen"),
+        sctx = screen.getContext("2d"),
+        img = sctx.createImageData(128, 128);
+      const c565 = (v) => [
+        (((v >> 11) & 31) * 255) / 31,
+        (((v >> 5) & 63) * 255) / 63,
+        ((v & 31) * 255) / 31,
+      ];
+      let ws,
+        tiltTimer = null,
+        pose = null;
+      function connect() {
+        ws = new WebSocket(
+          (location.protocol === "https:" ? "wss://" : "ws://") +
+            location.host +
+            "/ws/preview",
+        );
+        ws.binaryType = "arraybuffer";
+        ws.onmessage = (ev) => {
+          if (typeof ev.data === "string") return status(JSON.parse(ev.data));
+          const b = new Uint8Array(ev.data);
+          if (b[0] !== 0x10) return;
+          const fg = c565(b[2] | (b[3] << 8)),
+            bg = c565(b[4] | (b[5] << 8)),
+            d = img.data;
+          for (let i = 0; i < 16384; i++) {
+            const c = (b[6 + (i >> 3)] >> (7 - (i & 7))) & 1 ? fg : bg,
+              o = i * 4;
+            d[o] = c[0];
+            d[o + 1] = c[1];
+            d[o + 2] = c[2];
+            d[o + 3] = 255;
+          }
+          sctx.putImageData(img, 0, 0);
+        };
+        ws.onclose = () => {
+          $("stState").textContent = "reconnecting…";
+          setTimeout(connect, 1000);
+        };
+      }
+      function status(s) {
+        $("devDot").className = "dot" + (s.device ? " ok" : "");
+        $("devTxt").textContent = s.device ? "Device online" : "Device offline";
+        $("stState").textContent = s.state.toLowerCase();
+        $("stTilt").textContent = `tilt ${Math.round(s.tilt)}°`;
+        $("stLamp").textContent = s.lamp ? "lamp on" : "lamp off";
+        $("stMs").textContent = `${s.ms} ms`;
+      }
+      connect();
+
+      // ---------- tilt: buttons, or this phone's motion sensor, stand in for the device
+      const sendG = (g) =>
+        ws.readyState === 1 && ws.send(JSON.stringify({ g }));
+      function hold(fn, label) {
+        // keep sending so the server treats this as the live tilt source
+        clearInterval(tiltTimer);
+        tiltTimer = setInterval(fn, 50);
+        fn();
+        $("tiltMeta").textContent = "Tilt source: " + label;
+      }
+      document.querySelectorAll("[data-pose]").forEach(
+        (b) =>
+          (b.onclick = () => {
+            const p = b.dataset.pose;
+            window.removeEventListener("devicemotion", onMotion);
+            $("phoneTilt").classList.remove("on");
+            if (p === "flat")
+              return hold(() => sendG([0, 0.03, -1]), "buttons (lying flat)");
+            // swing to the new angle over 0.4 s, like a real hand would
+            const from = pose ?? 0,
+              to = +p,
+              t0 = performance.now();
+            hold(() => {
+              const k = Math.min((performance.now() - t0) / 400, 1),
+                a = ((from + (to - from) * k) * Math.PI) / 180;
+              pose = from + (to - from) * k;
+              sendG([Math.sin(a), Math.cos(a), 0]);
+            }, `buttons (${p}°)`);
+          }),
+      );
+      $("shake").onclick = () =>
+        ws.readyState === 1 && ws.send(JSON.stringify({ shake: true }));
+      $("useDevice").onclick = () => {
+        clearInterval(tiltTimer);
+        pose = null;
+        window.removeEventListener("devicemotion", onMotion);
+        $("phoneTilt").classList.remove("on");
+        $("tiltMeta").textContent = "Tilt source: the device's own sensor.";
+      };
+      let lastG = [0, 1, 0];
+      const ios = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      function onMotion(e) {
+        const a = e.accelerationIncludingGravity;
+        if (!a || a.x == null) return;
+        const s = ios ? 1 : -1; // Android reports the reaction to gravity, iOS reports gravity itself
+        lastG = [(s * a.x) / 9.81, (-s * a.y) / 9.81, (s * a.z) / 9.81];
+      }
+      $("phoneTilt").onclick = async () => {
+        try {
+          if (typeof DeviceMotionEvent === "undefined")
+            throw new Error("This browser has no motion sensor");
+          if (
+            DeviceMotionEvent.requestPermission &&
+            (await DeviceMotionEvent.requestPermission()) !== "granted"
+          )
+            throw new Error("Motion permission denied");
+          window.addEventListener("devicemotion", onMotion);
+          $("phoneTilt").classList.add("on");
+          pose = null;
+          hold(
+            () => sendG(lastG),
+            "this phone. Hold it upright, then turn it over.",
+          );
+        } catch (e) {
+          $("tiltMeta").textContent = e.message;
+        }
+      };
+
+      // ---------- settings
+      let cfg = {};
+      const fields = document.querySelectorAll("[data-k]");
+      function fill() {
+        fields.forEach((f) => {
+          const v = cfg[f.dataset.k];
+          if (f.type === "checkbox") f.checked = !!v;
+          else if (v != null) f.value = v;
+        });
+      }
+      fields.forEach(
+        (f) =>
+          (f.onchange = async () => {
+            const v =
+              f.type === "checkbox"
+                ? f.checked
+                : f.type === "number" || f.type === "range"
+                  ? +f.value
+                  : f.value;
+            cfg = await api("/api/config", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ [f.dataset.k]: v }),
+            });
+          }),
+      );
+      api("/api/config").then((c) => {
+        cfg = c;
+        fill();
+      });
+      const cal = (step) => async () => {
+        try {
+          const r = await api("/api/calibrate?step=" + step, {
+            method: "POST",
+          });
+          $("calMeta").className = "meta";
+          if (step === "apply") {
+            $("calMeta").textContent =
+              `Calibration applied using: ${(r.samples || []).join(", ") || "none"}.`;
+          } else if (step === "reset") {
+            $("calMeta").textContent = "Calibration captures cleared.";
+          } else {
+            $("calMeta").textContent =
+              `${step} captured.` + (r.next ? ` ${r.next}.` : "");
+          }
+        } catch (e) {
+          $("calMeta").className = "meta err";
+          $("calMeta").textContent = e.message;
+        }
+      };
+      $("calUp").onclick = cal("upright");
+      $("calLeft").onclick = cal("left");
+      $("calRight").onclick = cal("right");
+      $("calUpside").onclick = cal("upside");
+      $("calFlat").onclick = cal("flat");
+      $("calApply").onclick = cal("apply");
+      $("calReset").onclick = cal("reset");
+
+      // ---------- create
+      const file = $("file"),
+        drop = $("drop"),
+        meta = $("meta"),
+        clearBtn = $("clear"),
+        step2 = $("step2"),
+        out = $("out"),
+        meta2 = $("meta2");
+      const hint = drop.innerHTML;
+      let current = null,
+        rot = 0,
+        token = null,
+        timer = null;
+      $("rotate").onclick = () => {
+        rot = (rot + 90) % 360;
+        processImg();
+      };
+      $("process").onclick = processImg;
+      async function processImg() {
+        if (!current) return;
+        meta2.textContent = "Processing…";
+        meta2.className = "meta";
+        $("saveRow").hidden = true;
+        const q = new URLSearchParams({
+          name: current,
+          size: $("size").value,
+          invert: $("invert").checked,
+          style: $("style").value,
+          anim: $("anim").value,
+          mode: $("mode").value,
+          rot,
+        });
+        try {
+          const j = await api("/process?" + q, { method: "POST" });
+          token = j.token;
+          play(j);
+          $("saveRow").hidden = false;
+          meta2.textContent =
+            `${j.mode} · ${j.size}×${j.size} · ${j.rows.flat().filter(Boolean).length} pixels on` +
+            (j.frames.length > 1 ? ` · ${j.frames.length} frames` : "") +
+            (rot ? ` · rotated ${rot}°` : "");
+        } catch (e) {
+          meta2.textContent = e.message;
+          meta2.className = "meta err";
+        }
+      }
+      function play(j) {
+        clearInterval(timer);
+        let i = 0;
+        const tick = () => {
+          draw(j.frames[i], j.size);
+          i = (i + 1) % j.frames.length;
+        };
+        tick();
+        if (j.frames.length > 1) timer = setInterval(tick, 1000 / j.fps);
+      }
+      function draw(rows, size) {
+        const ctx = out.getContext("2d"),
+          cell = out.width / size,
+          gap = size > 64 ? 0 : size > 32 ? 0.5 : 1;
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, out.width, out.height);
+        ctx.fillStyle = "#fff";
+        rows.forEach((row, y) =>
+          row.forEach(
+            (on, x) =>
+              on &&
+              ctx.fillRect(
+                x * cell + gap,
+                y * cell + gap,
+                cell - 2 * gap,
+                cell - 2 * gap,
+              ),
+          ),
+        );
+      }
+      $("save").onclick = async () => {
+        try {
+          const r = await api(
+            `/api/animations?token=${token}&name=${encodeURIComponent($("saveName").value || "Untitled")}`,
+            { method: "POST" },
+          );
+          cfg = await api("/api/config", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ active_anim: r.id, show: "art" }),
+          });
+          fill();
+          meta2.textContent = "Saved. It is on the clock now.";
+          document.querySelector("[data-tab=clock]").click();
+        } catch (e) {
+          meta2.textContent = e.message;
+          meta2.className = "meta err";
+        }
+      };
+      $("pick").onclick = () => file.click();
+      file.onchange = () => file.files[0] && send(file.files[0]);
+      clearBtn.onclick = reset;
+      ["dragenter", "dragover"].forEach((e) =>
+        drop.addEventListener(e, (ev) => {
+          ev.preventDefault();
+          drop.classList.add("over");
+        }),
+      );
+      ["dragleave", "drop"].forEach((e) =>
+        drop.addEventListener(e, (ev) => {
+          ev.preventDefault();
+          drop.classList.remove("over");
+        }),
+      );
+      drop.addEventListener(
+        "drop",
+        (ev) => ev.dataTransfer.files[0] && send(ev.dataTransfer.files[0]),
+      );
+      async function send(f) {
+        meta.textContent = "Uploading…";
+        meta.className = "meta";
+        const fd = new FormData();
+        fd.append("file", f);
+        try {
+          const j = await api("/upload", { method: "POST", body: fd });
+          drop.classList.add("has");
+          drop.innerHTML = `<img src="${j.url}" alt="">`;
+          meta.textContent = `${j.name} · ${(j.size / 1024).toFixed(0)} KB`;
+          clearBtn.hidden = false;
+          current = j.url.split("/").pop();
+          rot = 0;
+          step2.hidden = false;
+          meta2.textContent = "";
+          processImg();
+        } catch (e) {
+          meta.textContent = e.message;
+          meta.className = "meta err";
+        }
+      }
+      function reset() {
+        file.value = "";
+        drop.classList.remove("has");
+        drop.innerHTML = hint;
+        meta.textContent = "";
+        clearBtn.hidden = true;
+        step2.hidden = true;
+        current = null;
+        clearInterval(timer);
+      }
+
+      // ---------- library
+      function thumb(canvas, b64, size) {
+        const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)),
+          ctx = canvas.getContext("2d"),
+          im = ctx.createImageData(size, size);
+        for (let i = 0; i < size * size; i++) {
+          const v = (bytes[i >> 3] >> (7 - (i & 7))) & 1 ? 255 : 0,
+            o = i * 4;
+          im.data[o] = im.data[o + 1] = im.data[o + 2] = v;
+          im.data[o + 3] = 255;
+        }
+        ctx.putImageData(im, 0, 0);
+      }
+      async function loadLibrary() {
+        const list = await api("/api/animations");
+        cfg = await api("/api/config");
+        fill();
+        $("libMeta").textContent = list.length
+          ? ""
+          : "Nothing saved yet. Make one in Create.";
+        $("lib").innerHTML = "";
+        list.forEach((a) => {
+          const el = document.createElement("div");
+          el.className = "item" + (a.id === cfg.active_anim ? " active" : "");
+          el.innerHTML = `<canvas class="px" width="${a.size}" height="${a.size}"></canvas><div class="name"></div>
+      <div class="actions" style="margin:0"><button class="small" style="flex:1">Show</button><button class="ghost small">Delete</button></div>`;
+          el.querySelector(".name").textContent =
+            `${a.name} · ${a.size}px` + (a.count > 1 ? ` · ${a.count}f` : "");
+          thumb(el.querySelector("canvas"), a.thumb, a.size);
+          const [show, del] = el.querySelectorAll("button");
+          show.onclick = async () => {
+            await api("/api/config", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ active_anim: a.id, show: "art" }),
+            });
+            document.querySelector("[data-tab=clock]").click();
+          };
+          del.onclick = async () => {
+            await api("/api/animations/" + a.id, { method: "DELETE" });
+            loadLibrary();
+          };
+          $("lib").appendChild(el);
+        });
+      }
+    </script>
+  </body>
+</html>
